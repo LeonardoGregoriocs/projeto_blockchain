@@ -39,9 +39,9 @@ def new_transaction():
 
     required = ['sender', 'recipient', 'amount']
     if not all(k in values for k in required):
-        return 'Valores ausentes'
+        return 'Valores ausentes', 400
 
-    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amout'])
+    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
 
     response = {'message': f"A transação será adicionada ao Bloco {index}"}
     return jsonify(response), 201
