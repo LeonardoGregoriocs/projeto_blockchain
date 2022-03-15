@@ -21,12 +21,12 @@ def mine():
     )
 
     previous_hash = blockchain.hash(last_block)
-    block = blockchain.new_transaction(proof, previous_hash)
+    block = blockchain.new_block(proof, previous_hash)
 
     response = {
         'message' : "Novo bloco forjado",
         'index' : block['index'],
-        'transaction' : block['transaction'],
+        'transactions' : block['transactions'],
         'proof' : block['proof'],
         'previous_hash' : block['previous_hash']
     }
@@ -43,7 +43,7 @@ def new_transaction():
 
     index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
 
-    response = {'message': f"A transação será adicionada ao Bloco {index}"}
+    response = {'message': f'A transação será adicionada ao Bloco {index}'}
     return jsonify(response), 201
 
 @app.route('/chain', methods=['GET'])
@@ -52,6 +52,40 @@ def full_chain():
         'chain' : blockchain.chain,
         'length' : len(blockchain.chain)
     }
+
+    return jsonify(response), 200
+
+@app.route('/nodes/register', methods=['POST'])
+def register_nodes():
+    values = request.get_json()
+
+    nodes = values.get('nodes')
+    if nodes is None:
+        return "Erro: Forneça uma lista válida de nós", 400
+
+    for node in nodes:
+        blockchain.register_node(node)
+
+    response = {
+        'message' : 'Novos nós foram adicionados',
+        'total_nodes' : list(blockchain.nodes)
+    }
+    return jsonify(response), 201
+
+@app.route('/nodes/resolve', methods=['GET'])
+def consensus():
+    replaced = blockchain.resolve_conflicts()
+
+    if replaced:
+        response = {
+            'message' : 'Corrente foi substituída',
+            'new_chain' : blockchain.chain
+        }
+    else:
+        response = {
+            'message' : 'Cadeia autoritária',
+            'chain' : blockchain.chain
+        }
 
     return jsonify(response), 200
 
